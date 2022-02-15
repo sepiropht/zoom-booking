@@ -34,8 +34,8 @@ export default function handler(
   }
   request(options, function (error: any, _, body: any) {
     if (error) throw new Error(error)
-    const { accessToken } = body
-    res.status(200).json({ accessToken })
+    const { access_token } = body
+    res.status(200).json({ accessToken: access_token })
   })
 }
 

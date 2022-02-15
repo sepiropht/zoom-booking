@@ -4,6 +4,7 @@ import styles from '../styles/Home.module.css'
 import { useState, useEffect } from 'react'
 import { Scheduler, WeekView } from '@progress/kendo-react-scheduler'
 import { Day } from '@progress/kendo-date-math'
+import { intervalToDuration } from 'date-fns'
 
 const SSR = typeof window === 'undefined'
 interface Task {
@@ -35,6 +36,7 @@ function getQueryVariable(variable: string): string {
 const Booking: NextPage = () => {
   const [data, setData] = useState<Array<Task>>([])
   const [accessToken, setAccessToken] = useState('')
+
   useEffect(() => {
     async function fecthAccessToken() {
       if (!SSR) {
@@ -53,6 +55,7 @@ const Booking: NextPage = () => {
     }
     fecthAccessToken()
   })
+
   return (
     <div className={styles.container}>
       <Head>
@@ -77,7 +80,31 @@ const Booking: NextPage = () => {
             editable={true}
             onDataChange={(event) => {
               if (event.created.length) {
-                setData([event.created.pop(), ...data])
+                const addedTask = event.created.pop()
+                const start_time = addedTask.start
+                const topic = addedTask.title
+                const type = 2
+                const { minutes } = intervalToDuration({
+                  start: start_time,
+                  end: addedTask.end,
+                })
+
+                fetch('api/booking', {
+                  method: 'POST',
+                  headers: {
+                    Accept: 'application/json',
+                    'Content-Type': 'application/json',
+                  },
+                  body: JSON.stringify({
+                    start_time,
+                    topic,
+                    type,
+                    duration: minutes,
+                    accessToken,
+                  }),
+                }).then(() => console.log('meeting created !'))
+
+                setData([addedTask, ...data])
               } else if (event.deleted.length) {
                 const deletedTask = event.deleted.pop()
                 setData(
